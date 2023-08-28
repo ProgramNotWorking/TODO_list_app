@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TODO list app</string>
+    <string name="task">Задача:</string>
+    <string name="time">Время:</string>
+    <string name="date">Дата:</string>
+    <string name="enter_data">Введите данные</string>
+    <string name="save">Сохранить</string>
+    <string name="set_time">Выставить время</string>
+    <string name="set_date">Выставить дату</string>
+    <string name="need_enter_task">Вы должны записать задачу</string>
+</resources>

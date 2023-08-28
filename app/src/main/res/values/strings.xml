@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TODO list app</string>
+    <string name="TODO" translatable="false">TODO</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="task">Task:</string>
+    <string name="time">Time:</string>
+    <string name="date">Date:</string>
+    <string name="enter_data">Enter data</string>
+    <string name="save">Save</string>
+    <string name="set_time">Set time</string>
+    <string name="set_date">Set date</string>
+    <string name="need_enter_task">You need to enter task</string>
+    <!-- TODO: Remove or change this placeholder text -->
+</resources>
