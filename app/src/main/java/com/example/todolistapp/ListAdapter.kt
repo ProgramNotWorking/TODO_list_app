@@ -51,6 +51,25 @@ class ListAdapter(
         notifyItemRemoved(position)
     }
 
+    fun replaceItem(position: Int, item: Item) {
+        itemsList.removeAt(position)
+        itemsList.add(position, item)
+    }
+
+    fun removeItemByData(item: Item) {
+        for (index in itemsList.indices) {
+            if (itemsList[index].thing == item.thing &&
+                itemsList[index].time == item.time &&
+                itemsList[index].date == item.date) {
+
+                itemsList.removeAt(index)
+                notifyItemRemoved(index)
+
+                break
+            }
+        }
+    }
+
     interface OnLayoutClickListener {
         fun onLayoutClick(item: Item)
     }

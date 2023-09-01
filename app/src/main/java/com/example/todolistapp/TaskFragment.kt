@@ -39,6 +39,7 @@ class TaskFragment : Fragment() {
         setSaveListener()
         setDateListener()
         setTimeListener()
+        setDeletingListener()
 
         getEditableTask()
     }
@@ -71,19 +72,28 @@ class TaskFragment : Fragment() {
     private fun setSaveListener() = with(binding) {
         saveButton.setOnClickListener {
             if (checkValidationOfEnteredData()) {
-                resultData = sendDataToMainFragment()
 
                 val bundle = Bundle()
+
+                if (arguments?.getBoolean(FragmentKeys.IS_EDIT) == true) {
+                    val editableItem = Item(
+                        arguments?.getString(FragmentKeys.TASK_KEY).toString(),
+                        arguments?.getString(FragmentKeys.TIME_KEY).toString(),
+                        arguments?.getString(FragmentKeys.DATE_KEY).toString()
+                    )
+
+                    bundle.putBoolean(FragmentKeys.IS_EDIT, true)
+                    bundle.putString(FragmentKeys.EDITABLE_TASK, editableItem.thing)
+                    bundle.putString(FragmentKeys.EDITABLE_TIME, editableItem.time)
+                    bundle.putString(FragmentKeys.EDITABLE_DATE, editableItem.date)
+                }
+
+                resultData = getEnteredData()
+
                 bundle.putString(FragmentKeys.TASK_KEY, resultData.thing)
                 bundle.putString(FragmentKeys.TIME_KEY, resultData.time)
                 bundle.putString(FragmentKeys.DATE_KEY, resultData.date)
                 bundle.putBoolean(FragmentKeys.IS_HAVE_RESULT, true)
-
-                if (editableData.thing.isNotEmpty()) {
-                    bundle.putBoolean(FragmentKeys.IS_EDIT, true)
-                    bundle.putString(FragmentKeys.EDITABLE_TASK, resultData.thing)
-                } else
-                    bundle.putBoolean(FragmentKeys.IS_EDIT, false)
 
                 val mainFragment = MainFragment()
                 mainFragment.arguments = bundle
@@ -121,7 +131,7 @@ class TaskFragment : Fragment() {
         }
     }
 
-    private fun sendDataToMainFragment() : Item = with(binding) {
+    private fun getEnteredData() : Item = with(binding) {
         val item = Item(
             enterTaskPlainTextVew.text.toString(),
             setTimeButton.text.toString(),
@@ -153,6 +163,28 @@ class TaskFragment : Fragment() {
 
             val datePickerDialog = DatePickerDialog(requireContext(), dateSetListener, year, month, day)
             datePickerDialog.show()
+        }
+    }
+
+    private fun setDeletingListener() = with(binding) {
+        deleteButton.setOnClickListener {
+            val bundle = Bundle()
+
+            val deletingData = getEnteredData()
+            bundle.putBoolean(FragmentKeys.IS_HAVE_RESULT, true)
+            bundle.putString(FragmentKeys.DELETING_TASK, deletingData.thing)
+            bundle.putString(FragmentKeys.DELETING_TIME, deletingData.time)
+            bundle.putString(FragmentKeys.DELETING_DATE, deletingData.date)
+            bundle.putBoolean(FragmentKeys.IS_DELETE, true)
+
+            val mainFragment = MainFragment()
+            mainFragment.arguments = bundle
+
+            parentFragmentManager
+                .beginTransaction()
+                .replace(R.id.mainHolder, mainFragment)
+                .addToBackStack(null)
+                .commit()
         }
     }
 

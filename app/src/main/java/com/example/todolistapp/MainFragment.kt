@@ -1,12 +1,10 @@
 package com.example.todolistapp
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isNotEmpty
 import androidx.core.view.size
 import androidx.recyclerview.widget.GridLayoutManager
@@ -15,14 +13,12 @@ import com.example.todolistapp.dataclasses.Item
 import com.example.todolistapp.db.TaskDatabase
 import com.example.todolistapp.objects.FragmentKeys
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), ListAdapter.OnLayoutClickListener {
 
     private lateinit var binding: FragmentMainBinding
     private val rcViewAdapter = ListAdapter(this@MainFragment)
 
     private var itemsList: MutableList<Item>? = null
-
-    private var item = Item("", "", "")
 
     private lateinit var database: TaskDatabase
 
@@ -34,8 +30,19 @@ class MainFragment : Fragment() {
         binding.listRecyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         binding.listRecyclerView.adapter = rcViewAdapter
 
+        binding.tempDeletingButton.setOnClickListener {
+            database.deleteData()
+
+            if (binding.listRecyclerView.isNotEmpty()) { // thing just for some tests (remove it later)
+                for (item in binding.listRecyclerView.size - 1 downTo 0) {
+                    rcViewAdapter.removeItem(item)
+                }
+            }
+        }
+
         openTaskFragment()
 
+        itemsList = database.getData()
         displayTasks()
 
         getResult()
@@ -49,44 +56,57 @@ class MainFragment : Fragment() {
         return binding.root
     }
 
-    private fun getResult() { // NAH I am tired tbh
+    private fun getResult() { // I FIX THIS SHIT (i wanna cut my head out of body)
         if (arguments?.getBoolean(FragmentKeys.IS_HAVE_RESULT) == true) {
-            if (arguments?.getBoolean(FragmentKeys.IS_EDIT) == true) {
+
+            val receivedData = Item (
+                arguments?.getString(FragmentKeys.TASK_KEY).toString(),
+                arguments?.getString(FragmentKeys.TIME_KEY).toString(),
+                arguments?.getString(FragmentKeys.DATE_KEY).toString()
+            )
+
+            if (arguments?.getBoolean(FragmentKeys.IS_EDIT) == true) { // check this shit
                 val editableItem = Item(
-                    arguments?.getString(FragmentKeys.TASK_KEY).toString(),
-                    arguments?.getString(FragmentKeys.TIME_KEY).toString(),
-                    arguments?.getString(FragmentKeys.DATE_KEY).toString()
+                    arguments?.getString(FragmentKeys.EDITABLE_TASK).toString(),
+                    arguments?.getString(FragmentKeys.EDITABLE_TIME).toString(),
+                    arguments?.getString(FragmentKeys.EDITABLE_DATE).toString()
                 )
+
                 for (item in itemsList!!.indices) {
-                    if (itemsList!![item].thing == arguments?.getString(FragmentKeys.EDITABLE_TASK).toString()) {
-                        itemsList!![item] = editableItem
+                    if (itemsList!![item].thing == editableItem.thing &&
+                        itemsList!![item].time == editableItem.time &&
+                        itemsList!![item].date == editableItem.date) {
+
+                        itemsList!![item] = receivedData
+                        rcViewAdapter.replaceItem(item, itemsList!![item])
+
+                        break
                     }
                 }
             } else {
-                item.thing = arguments?.getString(FragmentKeys.TASK_KEY).toString()
-                item.time = arguments?.getString(FragmentKeys.TIME_KEY).toString()
-                item.date = arguments?.getString(FragmentKeys.DATE_KEY).toString()
-
-                itemsList?.add(item)
+                itemsList?.add(receivedData)
+                rcViewAdapter.addItem(receivedData)
             }
 
-            database.insertTask(item)
-            rcViewAdapter.addItem(item)
+            if (arguments?.getBoolean(FragmentKeys.IS_DELETE) == true) {
+                val deletingData = Item(
+                    arguments?.getString(FragmentKeys.DELETING_TASK).toString(),
+                    arguments?.getString(FragmentKeys.DELETING_TIME).toString(),
+                    arguments?.getString(FragmentKeys.DELETING_DATE).toString()
+                )
+
+                deleteItemFromListByData(deletingData)
+                rcViewAdapter.removeItemByData(deletingData)
+            }
+
+            database.repopulateTable(itemsList)
         }
     }
 
-    private fun displayTasks() = with(binding) {
-        itemsList = database.getData()
-
-        if (listRecyclerView.isNotEmpty()) {
-            for (item in listRecyclerView.size - 1 downTo 0) {
-                rcViewAdapter.removeItem(item)
-            }
-        }
-
+    private fun displayTasks() {
         if (itemsList?.isNotEmpty() == true) {
-            for (item in itemsList!!) {
-                rcViewAdapter.addItem(item)
+            for (test in itemsList!!) {
+                rcViewAdapter.addItem(test)
             }
         }
     }
@@ -103,7 +123,7 @@ class MainFragment : Fragment() {
         }
     }
 
-    fun onLayoutClick(item: Item) { // <- may be use OnSwipeTouchListener class somehow
+    override fun onLayoutClick(item: Item) { // <- may be use OnSwipeTouchListener class somehow
         val bundle = Bundle()
         bundle.putString(FragmentKeys.TASK_KEY, item.thing)
         bundle.putString(FragmentKeys.TIME_KEY, item.time)
@@ -118,8 +138,18 @@ class MainFragment : Fragment() {
             .replace(R.id.mainHolder, taskFragment)
             .addToBackStack(null)
             .commit()
+    }
 
-        // deleting task here (or editing i guess)
+    private fun deleteItemFromListByData(data: Item) {
+        for (item in itemsList!!.indices) {
+            if (itemsList!![item].thing == data.thing &&
+                itemsList!![item].time == data.time &&
+                itemsList!![item].date == data.date) {
+
+                itemsList!!.removeAt(item)
+                break
+            }
+        }
     }
 
     companion object {
